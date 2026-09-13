@@ -2,42 +2,193 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Speech Synthesis</title>
-  <link href='https://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Speech Synthesis App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #4fd1c5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 500px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    h1 {
+      text-align: center;
+      background: #f7c600;
+      padding: 15px;
+      margin: -20px -20px 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+
+    textarea,
+    select,
+    input[type="range"] {
+      width: 100%;
+      margin-top: 5px;
+    }
+
+    textarea {
+      height: 150px;
+      resize: none;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: #f7c600;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="voiceinator">
+  <div class="container">
+    <h1>The Voiceinator 5000</h1>
 
-      <h1>The Voiceinator 5000</h1>
+    <select id="voices"></select>
 
-      <select name="voice" id="voices">
-        <option value="">Select A Voice</option>
-      </select>
+    <label for="rate">Rate:</label>
+    <input
+      type="range"
+      id="rate"
+      min="0.5"
+      max="2"
+      step="0.1"
+      value="1"
+    >
 
-      <label for="rate">Rate:</label>
-      <input name="rate" type="range" min="0" max="3" value="1" step="0.1">
+    <label for="pitch">Pitch:</label>
+    <input
+      type="range"
+      id="pitch"
+      min="0"
+      max="2"
+      step="0.1"
+      value="1"
+    >
 
-      <label for="pitch">Pitch:</label>
+    <textarea id="text">
+Hello! I love JavaScript 👍
+    </textarea>
 
-      <input name="pitch" type="range" min="0" max="2" step="0.1">
-      <textarea name="text">Hello! I love JavaScript 👍</textarea>
+    <div class="buttons">
       <button id="stop">Stop!</button>
       <button id="speak">Speak</button>
-
     </div>
+  </div>
 
-<script>
-  const msg = new SpeechSynthesisUtterance();
-  let voices = [];
-  const voicesDropdown = document.querySelector('[name="voice"]');
-  const options = document.querySelectorAll('[type="range"], [name="text"]');
-  const speakButton = document.querySelector('#speak');
-  const stopButton = document.querySelector('#stop');
+  <script>
+    const synth = window.speechSynthesis;
 
-  //Your code goes here
-</script>
+    const voiceSelect = document.getElementById("voices");
+    const rate = document.getElementById("rate");
+    const pitch = document.getElementById("pitch");
+    const textArea = document.getElementById("text");
+    const speakBtn = document.getElementById("speak");
+    const stopBtn = document.getElementById("stop");
+
+    let voices = [];
+    let message = new SpeechSynthesisUtterance();
+
+    // Populate voices
+    function populateVoices() {
+      voices = synth.getVoices();
+
+      voiceSelect.innerHTML = "";
+
+      if (voices.length === 0) {
+        const option = document.createElement("option");
+        option.textContent = "No voices available";
+        voiceSelect.appendChild(option);
+        return;
+      }
+
+      voices.forEach((voice, index) => {
+        const option = document.createElement("option");
+        option.value = index;
+        option.textContent = `${voice.name} (${voice.lang})`;
+        voiceSelect.appendChild(option);
+      });
+    }
+
+    // Speak text
+    function speak() {
+      const text = textArea.value.trim();
+
+      if (!text) return;
+
+      synth.cancel();
+
+      message.text = text;
+      message.rate = Number(rate.value);
+      message.pitch = Number(pitch.value);
+
+      const selectedVoice = voices[voiceSelect.value];
+      if (selectedVoice) {
+        message.voice = selectedVoice;
+      }
+
+      synth.speak(message);
+    }
+
+    // Stop speech
+    function stopSpeech() {
+      synth.cancel();
+    }
+
+    // Change voice while speaking
+    voiceSelect.addEventListener("change", () => {
+      if (synth.speaking) {
+        speak();
+      }
+    });
+
+    // Update rate dynamically
+    rate.addEventListener("input", () => {
+      if (synth.speaking) {
+        speak();
+      }
+    });
+
+    // Update pitch dynamically
+    pitch.addEventListener("input", () => {
+      if (synth.speaking) {
+        speak();
+      }
+    });
+
+    speakBtn.addEventListener("click", speak);
+    stopBtn.addEventListener("click", stopSpeech);
+
+    // Important: many browsers load voices asynchronously
+    populateVoices();
+    speechSynthesis.addEventListener("voiceschanged", populateVoices);
+  </script>
 
 </body>
 </html>

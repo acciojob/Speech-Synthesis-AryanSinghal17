@@ -1,71 +1,73 @@
-const msg = new SpeechSynthesisUtterance();
+const synth = window.speechSynthesis;
+
+const voiceSelect = document.getElementById("voices");
+const text = document.getElementById("text");
+const rate = document.getElementById("rate");
+const pitch = document.getElementById("pitch");
+const speakBtn = document.getElementById("speak");
+const stopBtn = document.getElementById("stop");
+
 let voices = [];
-
-const voicesDropdown = document.querySelector('[name="voice"]');
-const options = document.querySelectorAll('[type="range"], [name="text"]');
-const speakButton = document.querySelector('#speak');
-const stopButton = document.querySelector('#stop');
-
-msg.text = document.querySelector('[name="text"]').value;
+let utterance = new SpeechSynthesisUtterance();
 
 function populateVoices() {
-  voices = this.getVoices();
+  voices = synth.getVoices();
 
-  voicesDropdown.innerHTML = voices
-    .map(
-      voice =>
-        `<option value="${voice.name}">
-          ${voice.name} (${voice.lang})
-        </option>`
-    )
-    .join('');
-}
+  voiceSelect.innerHTML = "";
 
-function setVoice() {
-  msg.voice = voices.find(
-    voice => voice.name === this.value
-  );
-
-  toggle();
-}
-
-function toggle(startOver = true) {
-  speechSynthesis.cancel();
-
-  if (startOver) {
-    speechSynthesis.speak(msg);
+  if (voices.length === 0) {
+    const option = document.createElement("option");
+    option.textContent = "No voices available";
+    voiceSelect.appendChild(option);
+    return;
   }
+
+  voices.forEach((voice, index) => {
+    const option = document.createElement("option");
+    option.value = index;
+    option.textContent = `${voice.name} (${voice.lang})`;
+    voiceSelect.appendChild(option);
+  });
 }
 
-function setOption() {
-  msg[this.name] = this.value;
+function speak() {
+  if (text.value.trim() === "") return;
 
-  toggle();
+  synth.cancel();
+
+  utterance.text = text.value;
+  utterance.rate = rate.value;
+  utterance.pitch = pitch.value;
+  utterance.voice = voices[voiceSelect.value];
+
+  synth.speak(utterance);
 }
 
-speechSynthesis.addEventListener(
-  'voiceschanged',
-  populateVoices
-);
+function stopSpeech() {
+  synth.cancel();
+}
 
-voicesDropdown.addEventListener(
-  'change',
-  setVoice
-);
+voiceSelect.addEventListener("change", () => {
+  if (synth.speaking) {
+    speak();
+  }
+});
 
-options.forEach(option =>
-  option.addEventListener(
-    'change',
-    setOption
-  )
-);
+rate.addEventListener("input", () => {
+  if (synth.speaking) {
+    speak();
+  }
+});
 
-speakButton.addEventListener(
-  'click',
-  toggle
-);
+pitch.addEventListener("input", () => {
+  if (synth.speaking) {
+    speak();
+  }
+});
 
-stopButton.addEventListener(
-  'click',
-  () => toggle(false)
-);
+speakBtn.addEventListener("click", speak);
+stopBtn.addEventListener("click", stopSpeech);
+
+// Important for tests
+populateVoices();
+speechSynthesis.addEventListener("voiceschanged", populateVoices);
