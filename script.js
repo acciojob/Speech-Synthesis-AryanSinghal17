@@ -1,4 +1,3 @@
-// Your script here.
 const msg = new SpeechSynthesisUtterance();
 let voices = [];
 
@@ -9,7 +8,6 @@ const stopButton = document.querySelector('#stop');
 
 msg.text = document.querySelector('[name="text"]').value;
 
-// Get voices and populate dropdown
 function populateVoices() {
   voices = speechSynthesis.getVoices();
 
@@ -23,16 +21,6 @@ function populateVoices() {
     .join('');
 }
 
-// Set selected voice
-function setVoice() {
-  msg.voice = voices.find(
-    voice => voice.name === this.value
-  );
-
-  speak();
-}
-
-// Speak / Stop
 function speak() {
   if (!msg.text.trim()) return;
 
@@ -44,16 +32,25 @@ function stop() {
   speechSynthesis.cancel();
 }
 
-// Update text, pitch, rate
+function setVoice() {
+  msg.voice = voices.find(
+    voice => voice.name === this.value
+  );
+
+  speak();
+}
+
 function setOption() {
   msg[this.name] = this.value;
 
-  if (speechSynthesis.speaking) {
-    speak();
-  }
+  // Restart speech with new settings
+  speak();
 }
 
-// Events
+// Initial load
+populateVoices();
+
+// Some browsers load voices asynchronously
 speechSynthesis.addEventListener(
   "voiceschanged",
   populateVoices
@@ -64,6 +61,13 @@ voicesDropdown.addEventListener(
   setVoice
 );
 
+options.forEach(option =>
+  option.addEventListener(
+    "change",
+    setOption
+  )
+);
+
 speakButton.addEventListener(
   "click",
   speak
@@ -72,11 +76,4 @@ speakButton.addEventListener(
 stopButton.addEventListener(
   "click",
   stop
-);
-
-options.forEach(option =>
-  option.addEventListener(
-    "change",
-    setOption
-  )
 );
