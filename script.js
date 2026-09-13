@@ -8,7 +8,7 @@ const stopButton = document.querySelector('#stop');
 
 msg.text = document.querySelector('[name="text"]').value;
 
-// Populate voice dropdown
+// Load voices
 function populateVoices() {
   voices = speechSynthesis.getVoices();
 
@@ -22,19 +22,7 @@ function populateVoices() {
     .join('');
 }
 
-// Set selected voice
-function setVoice() {
-  msg.voice = voices.find(
-    voice => voice.name === this.value
-  );
-}
-
-// Update rate, pitch, text
-function setOption() {
-  msg[this.name] = this.value;
-}
-
-// Speak text
+// Speak
 function speak() {
   if (!msg.text.trim()) return;
 
@@ -42,20 +30,41 @@ function speak() {
   speechSynthesis.speak(msg);
 }
 
-// Stop speech
+// Stop
 function stop() {
   speechSynthesis.cancel();
 }
 
-// Load voices
+// Change voice
+function setVoice() {
+  msg.voice = voices.find(
+    voice => voice.name === this.value
+  );
+
+  speak();
+}
+
+// Change rate, pitch, text
+function setOption() {
+  msg[this.name] = this.value;
+
+  // Apply changes immediately
+  if (speechSynthesis.speaking) {
+    speak();
+  }
+}
+
+// Initial voice load
 populateVoices();
+
+// Some browsers load voices asynchronously
 speechSynthesis.onvoiceschanged = populateVoices;
 
 // Events
 voicesDropdown.addEventListener('change', setVoice);
 
 options.forEach(option =>
-  option.addEventListener('change', setOption)
+  option.addEventListener('input', setOption)
 );
 
 speakButton.addEventListener('click', speak);
